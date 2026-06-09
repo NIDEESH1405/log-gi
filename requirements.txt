@@ -1,0 +1,4 @@
+# Runtime dependencies
+ollama>=0.6.2        # Ollama Python client
+typer>=0.9.0         # CLI framework
+rich>=13.0.0         # Terminal output (also pulled in by typer)

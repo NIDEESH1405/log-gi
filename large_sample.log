@@ -1,0 +1,105 @@
+2024-06-09 10:00:01,001 INFO Application startup initiated
+2024-06-09 10:00:02,015 INFO Loading configuration
+2024-06-09 10:00:03,021 INFO Configuration loaded successfully
+2024-06-09 10:00:04,033 INFO Initializing database pool
+2024-06-09 10:00:05,045 INFO Database connection established
+2024-06-09 10:00:06,056 INFO Starting HTTP server on port 8080
+2024-06-09 10:00:07,070 INFO Health check endpoint registered
+2024-06-09 10:00:08,082 INFO Scheduler service started
+2024-06-09 10:00:09,095 INFO Cache initialized
+2024-06-09 10:00:10,110 INFO Application ready
+
+2024-06-09 10:00:11,120 INFO GET /api/users 200
+2024-06-09 10:00:12,130 INFO GET /api/products 200
+2024-06-09 10:00:13,140 INFO POST /api/orders 201
+2024-06-09 10:00:14,150 INFO GET /api/orders/101 200
+2024-06-09 10:00:15,160 INFO GET /api/inventory 200
+2024-06-09 10:00:16,170 INFO Cache hit for inventory
+2024-06-09 10:00:17,180 INFO GET /api/users/55 200
+2024-06-09 10:00:18,190 INFO Heartbeat OK
+2024-06-09 10:00:19,200 INFO Background cleanup started
+2024-06-09 10:00:20,210 INFO Cleanup completed
+
+2024-06-09 10:00:21,220 INFO GET /api/products/22 200
+2024-06-09 10:00:22,230 INFO GET /api/products/23 200
+2024-06-09 10:00:23,240 INFO GET /api/products/24 200
+2024-06-09 10:00:24,250 WARNING Slow query detected (950ms)
+2024-06-09 10:00:25,260 INFO Query completed
+2024-06-09 10:00:26,270 INFO GET /api/users/60 200
+2024-06-09 10:00:27,280 INFO GET /api/users/61 200
+2024-06-09 10:00:28,290 INFO GET /api/users/62 200
+2024-06-09 10:00:29,300 INFO Heartbeat OK
+2024-06-09 10:00:30,310 INFO Metrics exported
+
+2024-06-09 10:00:31,320 INFO POST /api/payments
+2024-06-09 10:00:32,330 INFO Validating payment payload
+2024-06-09 10:00:33,340 INFO Connecting to payment gateway
+2024-06-09 10:00:34,350 INFO Payment request sent
+2024-06-09 10:00:35,360 INFO Waiting for gateway response
+2024-06-09 10:00:36,370 INFO Waiting for gateway response
+2024-06-09 10:00:37,380 INFO Waiting for gateway response
+2024-06-09 10:00:38,390 INFO Waiting for gateway response
+2024-06-09 10:00:39,400 INFO Waiting for gateway response
+
+2024-06-09 10:00:40,410 ERROR Payment processing failed
+Traceback (most recent call last):
+File "/app/payment_service.py", line 120, in process_payment
+response = gateway.charge(order)
+File "/app/gateway.py", line 48, in charge
+raise ConnectionError("Gateway timeout")
+ConnectionError: Gateway timeout
+
+2024-06-09 10:00:41,420 ERROR Rolling back transaction
+2024-06-09 10:00:42,430 INFO Transaction rollback complete
+2024-06-09 10:00:43,440 INFO User notified of payment failure
+2024-06-09 10:00:44,450 INFO Response 503 sent
+2024-06-09 10:00:45,460 INFO Heartbeat OK
+2024-06-09 10:00:46,470 INFO GET /api/status 200
+2024-06-09 10:00:47,480 INFO GET /api/users 200
+2024-06-09 10:00:48,490 INFO GET /api/products 200
+2024-06-09 10:00:49,500 INFO Metrics exported
+2024-06-09 10:00:50,510 INFO Heartbeat OK
+
+2024-06-09 10:00:51,520 INFO Scheduled backup started
+2024-06-09 10:00:52,530 INFO Backup progress 10%
+2024-06-09 10:00:53,540 INFO Backup progress 20%
+2024-06-09 10:00:54,550 INFO Backup progress 30%
+2024-06-09 10:00:55,560 INFO Backup progress 40%
+2024-06-09 10:00:56,570 INFO Backup progress 50%
+2024-06-09 10:00:57,580 INFO Backup progress 60%
+2024-06-09 10:00:58,590 INFO Backup progress 70%
+2024-06-09 10:00:59,600 INFO Backup progress 80%
+2024-06-09 10:01:00,610 INFO Backup progress 90%
+
+2024-06-09 10:01:01,620 INFO Backup completed
+2024-06-09 10:01:02,630 INFO GET /api/orders 200
+2024-06-09 10:01:03,640 INFO GET /api/orders/110 200
+2024-06-09 10:01:04,650 INFO GET /api/orders/111 200
+2024-06-09 10:01:05,660 INFO GET /api/orders/112 200
+2024-06-09 10:01:06,670 INFO Cache refresh started
+2024-06-09 10:01:07,680 INFO Cache refresh complete
+2024-06-09 10:01:08,690 INFO GET /api/users 200
+2024-06-09 10:01:09,700 INFO Heartbeat OK
+2024-06-09 10:01:10,710 INFO Metrics exported
+
+2024-06-09 10:01:11,720 INFO GET /api/products 200
+2024-06-09 10:01:12,730 INFO GET /api/products/90 200
+2024-06-09 10:01:13,740 INFO GET /api/products/91 200
+2024-06-09 10:01:14,750 INFO GET /api/products/92 200
+2024-06-09 10:01:15,760 INFO GET /api/products/93 200
+2024-06-09 10:01:16,770 INFO GET /api/products/94 200
+2024-06-09 10:01:17,780 INFO GET /api/products/95 200
+2024-06-09 10:01:18,790 INFO GET /api/products/96 200
+2024-06-09 10:01:19,800 INFO Heartbeat OK
+2024-06-09 10:01:20,810 INFO GET /api/status 200
+
+2024-06-09 10:01:21,820 INFO Scheduler cycle started
+2024-06-09 10:01:22,830 INFO Scheduler cycle completed
+2024-06-09 10:01:23,840 INFO GET /api/users 200
+2024-06-09 10:01:24,850 INFO GET /api/products 200
+2024-06-09 10:01:25,860 INFO GET /api/orders 200
+2024-06-09 10:01:26,870 INFO Heartbeat OK
+2024-06-09 10:01:27,880 INFO Metrics exported
+2024-06-09 10:01:28,890 INFO Cache hit
+2024-06-09 10:01:29,900 INFO GET /api/status 200
+2024-06-09 10:01:30,910 INFO Application running normally
