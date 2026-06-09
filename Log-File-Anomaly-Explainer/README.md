@@ -57,19 +57,47 @@ On-call engineers constantly deal with hundreds of log lines during outages and 
 
 ---
 
+## 📂 Project Structure
+
+The project is structured under a clean root folder:
+
+```
+Log-File-Anomaly-Explainer/
+│
+├── backend/
+│   ├── examples/          # Sample logs and test scripts
+│   ├── llm_explainer.py   # AI explanation orchestration
+│   ├── log_parser.py      # Scan & extract error contexts
+│   ├── main.py            # CLI entry point
+│   └── report_generator.py# Report format generation
+│
+├── frontend/
+│   ├── database.py        # SQLite database utilities
+│   ├── styles.py          # Custom CSS stylesheets
+│   └── utils.py           # Helper files
+│
+├── app.py                 # Streamlit application entry point
+├── README.md              # Project documentation
+├── requirements.txt       # Project dependencies
+├── .gitignore             # Git ignore file
+└── large_sample.log       # Sample log file
+```
+
+---
+
 ## 🚀 Installation
 
 Follow these quick commands to set up the environment:
 
 ### 1. Clone Repository
 ```bash
-git clone https://github.com/your-org/log-file-anomaly-explainer.git
-cd log-file-anomaly-explainer
+git clone https://github.com/nithishsivasamy07-sudo/Log-File-Anomaly-Explainer.git
+cd Log-File-Anomaly-Explainer
 ```
 
 ### 2. Install Dependencies
 ```bash
-pip install -r requirements.txt
+pip install -r Log-File-Anomaly-Explainer/requirements.txt
 ```
 
 ### 3. Start Ollama Model
@@ -79,12 +107,12 @@ ollama run llama3.2
 
 ### 4. Run Backend
 ```bash
-python main.py --help
+python Log-File-Anomaly-Explainer/backend/main.py --help
 ```
 
 ### 5. Run Frontend
 ```bash
-streamlit run app.py
+streamlit run Log-File-Anomaly-Explainer/app.py
 ```
 
 ---
@@ -94,7 +122,7 @@ streamlit run app.py
 Run the analysis tool directly via the command line:
 
 ```bash
-python app.py sample.log
+python Log-File-Anomaly-Explainer/app.py Log-File-Anomaly-Explainer/large_sample.log
 ```
 
 ---
