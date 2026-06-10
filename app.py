@@ -327,10 +327,13 @@ with tab_analyze:
         st.stop()
 
     # ── Options row ───────────────────────────────────────────
+    # Auto-detect Groq API key from environment (set in Render dashboard)
+    _groq_key = os.environ.get("GROQ_API_KEY", "").strip()
+
     provider = st.selectbox(
         "LLM Provider",
         options=["Groq (Cloud)", "Ollama (Local)"],
-        index=0 if os.environ.get("GROQ_API_KEY") else 1,
+        index=0 if _groq_key else 1,
         help="Select Groq for cloud/Render deployment, or Ollama for local execution."
     )
 
@@ -345,9 +348,13 @@ with tab_analyze:
                 index=0,
                 help="llama-3.3-70b-versatile is recommended for fast, high-quality SRE analysis."
             )
-            api_key_val = os.environ.get("GROQ_API_KEY")
+            # Use the API key from environment automatically — no manual entry needed
+            api_key_val = _groq_key or None
             if not api_key_val:
-                api_key_val = st.text_input("Groq API Key", type="password", help="Enter your Groq API key (starts with gsk_).")
+                st.warning(
+                    "⚠️ `GROQ_API_KEY` environment variable is not set. "
+                    "Please set it in your Render dashboard under Environment → Environment Variables."
+                )
         else:
             model = st.text_input("Ollama model", value=DEFAULT_MODEL, help="Any model tag you have pulled locally.")
 
