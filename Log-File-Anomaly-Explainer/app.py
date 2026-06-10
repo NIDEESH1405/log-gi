@@ -9,6 +9,7 @@ Run with:
 
 from __future__ import annotations
 
+import os
 import sqlite3
 import sys
 from datetime import datetime, timezone
@@ -326,9 +327,28 @@ with tab_analyze:
         st.stop()
 
     # ── Options row ───────────────────────────────────────────
+    provider = st.selectbox(
+        "LLM Provider",
+        options=["Google Gemini (Cloud)", "Ollama (Local)"],
+        index=0 if os.environ.get("GEMINI_API_KEY") else 1,
+        help="Select Google Gemini for cloud/Render deployment, or Ollama for local execution."
+    )
+
     col_model, col_ctx, col_nollm = st.columns([2, 2, 1])
+    api_key_val = None
+
     with col_model:
-        model = st.text_input("Ollama model", value=DEFAULT_MODEL, help="Any model tag you have pulled locally.")
+        if provider == "Google Gemini (Cloud)":
+            model = st.selectbox(
+                "Gemini Model",
+                options=["gemini-2.5-flash", "gemini-2.5-pro", "gemini-1.5-flash", "gemini-1.5-pro"],
+                index=0,
+                help="Gemini 2.5 Flash is recommended for fast, cost-effective SRE analysis."
+            )
+            api_key_val = os.environ.get("GEMINI_API_KEY")
+        else:
+            model = st.text_input("Ollama model", value=DEFAULT_MODEL, help="Any model tag you have pulled locally.")
+
     with col_ctx:
         context_lines = st.slider("Context lines", min_value=5, max_value=60, value=20, step=5)
     with col_nollm:
@@ -391,7 +411,7 @@ with tab_analyze:
         st.info("LLM step skipped.")
     else:
         with st.status(f"🤖 Asking **{model}** to explain the anomaly…", expanded=False) as status:
-            explanation = explain_anomaly(log_context, model=model)
+            explanation = explain_anomaly(log_context, model=model, api_key=api_key_val)
             if explanation.get("error"):
                 status.update(label=f"⚠️ LLM warning: {explanation['error']}", state="error")
                 st.warning(explanation["error"])

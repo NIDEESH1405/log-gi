@@ -86,11 +86,15 @@ def analyse(
         dir_okay=False,
         readable=True,
     ),
-    model: str = typer.Option(
-        "llama3.2:latest",
+    model: Optional[str] = typer.Option(
+        None,
         "--model",
-        help="Ollama model tag for the LLM explanation.",
-        show_default=True,
+        help="LLM model name (defaults to gemini-2.5-flash if GEMINI_API_KEY is set, else llama3.2:latest).",
+    ),
+    api_key: Optional[str] = typer.Option(
+        None,
+        "--api-key",
+        help="Google Gemini API Key (overrides GEMINI_API_KEY environment variable).",
     ),
     output: str = typer.Option(
         "anomaly_report.md",
@@ -119,6 +123,12 @@ def analyse(
     ),
 ) -> None:
     """Detect anomalies in LOGFILE and write an AI-powered Markdown report."""
+    import os
+    if not model:
+        if os.environ.get("GEMINI_API_KEY") or api_key:
+            model = "gemini-2.5-flash"
+        else:
+            model = "llama3.2:latest"
 
     console.print()
     console.print(Rule("[bold cyan]Log File Anomaly Explainer[/bold cyan]"))
@@ -162,7 +172,7 @@ def analyse(
         console.print()
     else:
         with _spinner(console, f"Asking [bold]{model}[/bold] to explain the anomaly…"):
-            explanation = explain_anomaly(log_context, model=model)
+            explanation = explain_anomaly(log_context, model=model, api_key=api_key)
 
         if explanation["error"]:
             console.print(

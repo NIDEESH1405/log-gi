@@ -11,11 +11,19 @@ Public API
 
 from __future__ import annotations
 
+import os
 import re
 import textwrap
 from typing import Optional
 
 import ollama
+try:
+    from google import genai
+    from google.genai import errors as genai_errors
+except ImportError:
+    genai = None
+    genai_errors = None
+
 
 # ---------------------------------------------------------------------------
 # Prompt templates
@@ -172,8 +180,9 @@ def _parse_sections(text: str) -> dict[str, str]:
 def explain_anomaly(
     log_context: dict,
     model: str = "llama3.2:latest",
+    api_key: str | None = None,
 ) -> dict:
-    """Send a parsed log-error context to a local Ollama model for analysis.
+    """Send a parsed log-error context to an LLM (Ollama or Gemini) for analysis.
 
     Parameters
     ----------
@@ -182,7 +191,12 @@ def explain_anomaly(
         at least ``"found": True``; if ``found`` is ``False`` an error result
         is returned without calling the model.
     model:
-        Ollama model tag to use.  Defaults to ``"llama3.2:latest"``.
+        Model tag to use. Defaults to ``"llama3.2:latest"``. If a Gemini model name
+        (e.g., ``"gemini-2.5-flash"``) is provided, or if an API key is present,
+        Gemini will be used.
+    api_key:
+        Google Gemini API key. If not provided, will look for the ``GEMINI_API_KEY``
+        environment variable.
 
     Returns
     -------
@@ -201,7 +215,7 @@ def explain_anomaly(
     ``raw_llm_response`` (str)
         The full, unmodified text returned by the model.
     ``model`` (str)
-        The Ollama model tag that was used.
+        The model tag that was used.
     ``error`` (str | None)
         ``None`` on success; a human-friendly error message on failure.
 
@@ -239,54 +253,85 @@ def explain_anomaly(
         context_after    = context_after    or "(no following context)",
     )
 
-    # ------------------------------------------------------------------
-    # Call Ollama
-    # ------------------------------------------------------------------
-    try:
-        response = ollama.chat(
-            model=model,
-            messages=[
-                {"role": "system",  "content": _SYSTEM_PROMPT},
-                {"role": "user",    "content": user_prompt},
-            ],
-            options={
-                "temperature": 0.3,
-            },
-        )
-    except ollama.RequestError as exc:
-        return _error_result(
-            f"Ollama request error: {exc.error}",
-            model=model,
-        )
-    except ollama.ResponseError as exc:
-        if exc.status_code == 404:
+    # Determine if we should use Gemini
+    actual_api_key = api_key or os.environ.get("GEMINI_API_KEY")
+    is_gemini = model.lower().startswith("gemini") or actual_api_key is not None
+
+    if is_gemini:
+        gemini_model = model if model.lower().startswith("gemini") else "gemini-2.5-flash"
+        if genai is None:
             return _error_result(
-                f"Model '{model}' not found locally. "
-                f"Pull it first with:  ollama pull {model}",
+                "Google GenAI SDK is not installed or failed to import.",
+                model=gemini_model,
+            )
+        try:
+            client = genai.Client(api_key=actual_api_key)
+            from google.genai import types
+            config = types.GenerateContentConfig(
+                system_instruction=_SYSTEM_PROMPT,
+                temperature=0.3,
+            )
+            response = client.models.generate_content(
+                model=gemini_model,
+                contents=user_prompt,
+                config=config,
+            )
+            raw = response.text or ""
+            model = gemini_model
+        except Exception as exc:
+            return _error_result(
+                f"Gemini API error ({type(exc).__name__}): {exc}",
+                model=gemini_model,
+            )
+    else:
+        # ------------------------------------------------------------------
+        # Call Ollama
+        # ------------------------------------------------------------------
+        try:
+            response = ollama.chat(
+                model=model,
+                messages=[
+                    {"role": "system",  "content": _SYSTEM_PROMPT},
+                    {"role": "user",    "content": user_prompt},
+                ],
+                options={
+                    "temperature": 0.3,
+                },
+            )
+            raw = response.message.content or ""
+        except ollama.RequestError as exc:
+            return _error_result(
+                f"Ollama request error: {exc.error}",
                 model=model,
             )
-        return _error_result(
-            f"Ollama response error (HTTP {exc.status_code}): {exc.error}",
-            model=model,
-        )
-    except Exception as exc:  # noqa: BLE001  – catch connection errors, etc.
-        # httpx.ConnectError surfaces here when the Ollama server isn't running
-        exc_name = type(exc).__name__
-        if "connect" in exc_name.lower() or "connect" in str(exc).lower():
+        except ollama.ResponseError as exc:
+            if exc.status_code == 404:
+                return _error_result(
+                    f"Model '{model}' not found locally. "
+                    f"Pull it first with:  ollama pull {model}",
+                    model=model,
+                )
             return _error_result(
-                "Could not connect to Ollama. "
-                "Make sure the Ollama server is running:  ollama serve",
+                f"Ollama response error (HTTP {exc.status_code}): {exc.error}",
                 model=model,
             )
-        return _error_result(
-            f"Unexpected error communicating with Ollama ({exc_name}): {exc}",
-            model=model,
-        )
+        except Exception as exc:  # noqa: BLE001  – catch connection errors, etc.
+            # httpx.ConnectError surfaces here when the Ollama server isn't running
+            exc_name = type(exc).__name__
+            if "connect" in exc_name.lower() or "connect" in str(exc).lower():
+                return _error_result(
+                    "Could not connect to Ollama. "
+                    "Make sure the Ollama server is running:  ollama serve",
+                    model=model,
+                )
+            return _error_result(
+                f"Unexpected error communicating with Ollama ({exc_name}): {exc}",
+                model=model,
+            )
 
     # ------------------------------------------------------------------
     # Parse the response
     # ------------------------------------------------------------------
-    raw: str = response.message.content or ""
     sections  = _parse_sections(raw)
 
     return {
