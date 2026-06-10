@@ -1,6 +1,7 @@
 # Runtime dependencies
-ollama>=0.6.2        # Ollama Python client
+streamlit>=1.30.0    # Web frontend
+pandas>=2.0.0        # Data manipulation
+ollama>=0.6.2        # Ollama Python client (local LLM)
 typer>=0.9.0         # CLI framework
 rich>=13.0.0         # Terminal output (also pulled in by typer)
-groq>=0.9.0          # Groq Python SDK
-
+groq>=0.9.0          # Groq Python SDK (cloud LLM)
