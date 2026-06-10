@@ -329,13 +329,20 @@ with tab_analyze:
     # ── Options row ───────────────────────────────────────────
     # Auto-detect Groq API key from environment (set in Render dashboard)
     _groq_key = os.environ.get("GROQ_API_KEY", "").strip()
+    _is_cloud = bool(_groq_key) or bool(os.environ.get("RENDER"))
 
-    provider = st.selectbox(
-        "LLM Provider",
-        options=["Groq (Cloud)", "Ollama (Local)"],
-        index=0 if _groq_key else 1,
-        help="Select Groq for cloud/Render deployment, or Ollama for local execution."
-    )
+    # On Render / cloud: lock to Groq (Ollama is not available)
+    # Locally: allow choosing between Groq and Ollama
+    if _is_cloud:
+        provider = "Groq (Cloud)"
+        st.info("☁️ Running on cloud — using **Groq** for AI analysis.")
+    else:
+        provider = st.selectbox(
+            "LLM Provider",
+            options=["Groq (Cloud)", "Ollama (Local)"],
+            index=0 if _groq_key else 1,
+            help="Select Groq for cloud/Render deployment, or Ollama for local execution."
+        )
 
     col_model, col_ctx, col_nollm = st.columns([2, 2, 1])
     api_key_val = None
