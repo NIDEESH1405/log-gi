@@ -329,23 +329,25 @@ with tab_analyze:
     # ── Options row ───────────────────────────────────────────
     provider = st.selectbox(
         "LLM Provider",
-        options=["Google Gemini (Cloud)", "Ollama (Local)"],
-        index=0 if os.environ.get("GEMINI_API_KEY") else 1,
-        help="Select Google Gemini for cloud/Render deployment, or Ollama for local execution."
+        options=["Groq (Cloud)", "Ollama (Local)"],
+        index=0 if os.environ.get("GROQ_API_KEY") else 1,
+        help="Select Groq for cloud/Render deployment, or Ollama for local execution."
     )
 
     col_model, col_ctx, col_nollm = st.columns([2, 2, 1])
     api_key_val = None
 
     with col_model:
-        if provider == "Google Gemini (Cloud)":
+        if provider == "Groq (Cloud)":
             model = st.selectbox(
-                "Gemini Model",
-                options=["gemini-2.5-flash", "gemini-2.5-pro", "gemini-1.5-flash", "gemini-1.5-pro"],
+                "Groq Model",
+                options=["llama-3.3-70b-versatile", "llama-3.1-8b-instant", "mixtral-8x7b-32768", "gemma2-9b-it"],
                 index=0,
-                help="Gemini 2.5 Flash is recommended for fast, cost-effective SRE analysis."
+                help="llama-3.3-70b-versatile is recommended for fast, high-quality SRE analysis."
             )
-            api_key_val = os.environ.get("GEMINI_API_KEY")
+            api_key_val = os.environ.get("GROQ_API_KEY")
+            if not api_key_val:
+                api_key_val = st.text_input("Groq API Key", type="password", help="Enter your Groq API key (starts with gsk_).")
         else:
             model = st.text_input("Ollama model", value=DEFAULT_MODEL, help="Any model tag you have pulled locally.")
 

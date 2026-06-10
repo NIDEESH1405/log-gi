@@ -18,11 +18,9 @@ from typing import Optional
 
 import ollama
 try:
-    from google import genai
-    from google.genai import errors as genai_errors
+    from groq import Groq
 except ImportError:
-    genai = None
-    genai_errors = None
+    Groq = None
 
 
 # ---------------------------------------------------------------------------
@@ -182,7 +180,7 @@ def explain_anomaly(
     model: str = "llama3.2:latest",
     api_key: str | None = None,
 ) -> dict:
-    """Send a parsed log-error context to an LLM (Ollama or Gemini) for analysis.
+    """Send a parsed log-error context to an LLM (Ollama or Groq) for analysis.
 
     Parameters
     ----------
@@ -191,11 +189,11 @@ def explain_anomaly(
         at least ``"found": True``; if ``found`` is ``False`` an error result
         is returned without calling the model.
     model:
-        Model tag to use. Defaults to ``"llama3.2:latest"``. If a Gemini model name
-        (e.g., ``"gemini-2.5-flash"``) is provided, or if an API key is present,
-        Gemini will be used.
+        Model tag to use. Defaults to ``"llama3.2:latest"``. If a Groq model name
+        (e.g., ``"llama-3.3-70b-versatile"``) is provided, or if an API key is present,
+        Groq will be used.
     api_key:
-        Google Gemini API key. If not provided, will look for the ``GEMINI_API_KEY``
+        Groq API key. If not provided, will look for the ``GROQ_API_KEY``
         environment variable.
 
     Returns
@@ -253,35 +251,33 @@ def explain_anomaly(
         context_after    = context_after    or "(no following context)",
     )
 
-    # Determine if we should use Gemini
-    actual_api_key = api_key or os.environ.get("GEMINI_API_KEY")
-    is_gemini = model.lower().startswith("gemini") or actual_api_key is not None
+    # Determine if we should use Groq
+    actual_api_key = api_key or os.environ.get("GROQ_API_KEY")
+    is_groq = model.startswith("llama-3") or model.startswith("mixtral") or model.startswith("gemma2") or actual_api_key is not None
 
-    if is_gemini:
-        gemini_model = model if model.lower().startswith("gemini") else "gemini-2.5-flash"
-        if genai is None:
+    if is_groq:
+        groq_model = model if (model.startswith("llama-3") or model.startswith("mixtral") or model.startswith("gemma2")) else "llama-3.3-70b-versatile"
+        if Groq is None:
             return _error_result(
-                "Google GenAI SDK is not installed or failed to import.",
-                model=gemini_model,
+                "Groq SDK is not installed or failed to import.",
+                model=groq_model,
             )
         try:
-            client = genai.Client(api_key=actual_api_key)
-            from google.genai import types
-            config = types.GenerateContentConfig(
-                system_instruction=_SYSTEM_PROMPT,
+            client = Groq(api_key=actual_api_key)
+            response = client.chat.completions.create(
+                model=groq_model,
+                messages=[
+                    {"role": "system",  "content": _SYSTEM_PROMPT},
+                    {"role": "user",    "content": user_prompt},
+                ],
                 temperature=0.3,
             )
-            response = client.models.generate_content(
-                model=gemini_model,
-                contents=user_prompt,
-                config=config,
-            )
-            raw = response.text or ""
-            model = gemini_model
+            raw = response.choices[0].message.content or ""
+            model = groq_model
         except Exception as exc:
             return _error_result(
-                f"Gemini API error ({type(exc).__name__}): {exc}",
-                model=gemini_model,
+                f"Groq API error ({type(exc).__name__}): {exc}",
+                model=groq_model,
             )
     else:
         # ------------------------------------------------------------------

@@ -10,7 +10,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from llm_explainer import explain_anomaly
 
 
-def test_explain_anomaly_gemini_mock():
+def test_explain_anomaly_groq_mock():
     # Mock log context
     log_context = {
         "found": True,
@@ -25,8 +25,8 @@ def test_explain_anomaly_gemini_mock():
     }
 
     # Prepare mock response
-    mock_response = MagicMock()
-    mock_response.text = (
+    mock_choice = MagicMock()
+    mock_choice.message.content = (
         "SUMMARY:\n"
         "Connection refused error.\n"
         "ROOT_CAUSE:\n"
@@ -38,20 +38,22 @@ def test_explain_anomaly_gemini_mock():
         "PREVENTION:\n"
         "Ensure ports are open."
     )
+    mock_response = MagicMock()
+    mock_response.choices = [mock_choice]
 
-    # Patch the google-genai Client
-    with patch("google.genai.Client") as mock_client_cls:
+    # Patch the groq Client
+    with patch("llm_explainer.Groq") as mock_groq_cls:
         mock_client = MagicMock()
-        mock_client.models.generate_content.return_value = mock_response
-        mock_client_cls.return_value = mock_client
+        mock_client.chat.completions.create.return_value = mock_response
+        mock_groq_cls.return_value = mock_client
 
-        # Call function using a gemini model name
-        res = explain_anomaly(log_context, model="gemini-2.5-flash", api_key="test-api-key")
+        # Call function using a groq model name
+        res = explain_anomaly(log_context, model="llama-3.3-70b-versatile", api_key="test-api-key")
 
         # Assertions
         assert res["error"] is None
         assert res["summary"] == "Connection refused error."
         assert res["root_cause"] == "The server port is not open."
         assert res["suggested_fix"] == "Open port 80."
-        assert res["model"] == "gemini-2.5-flash"
-        mock_client_cls.assert_called_once_with(api_key="test-api-key")
+        assert res["model"] == "llama-3.3-70b-versatile"
+        mock_groq_cls.assert_called_once_with(api_key="test-api-key")
